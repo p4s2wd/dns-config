@@ -1,0 +1,57 @@
+$TTL 86400
+@       IN      SOA     ns1.mylab.io. admin.mylab.io. (
+                2024052001 ; Serial
+                3600       ; Refresh
+                1800       ; Retry
+                604800     ; Expire
+                86400      ; Minimum TTL
+)
+
+@       IN      NS      ns1.mylab.io.
+ns1     IN      A       192.168.2.2  
+www  IN      	 A        192.168.2.3
+dns0001  IN      A        192.168.2.2
+mon0001  IN      A        192.168.2.3
+draw  IN      	 A        192.168.2.3
+outline  IN      A        192.168.2.3
+bitbucket  IN    A        192.168.2.3
+cd  IN      	 A        192.168.2.3
+gitlab  IN       A        192.168.2.2
+harbor  IN       A        192.168.2.4
+rhel7-ai  IN     A        192.168.2.4
+esx0001  IN      A        192.168.2.5
+myai001  IN      A        192.168.2.6
+chat	 IN      A        192.168.2.6
+esx0003  IN      A        192.168.2.7
+vct0001  IN      A        192.168.2.8
+sdp75  IN        A        192.168.2.10
+mynas  IN      	 A        192.168.2.11
+monitor  IN      A        192.168.2.11
+gemini  IN       A        192.168.2.11
+hc800  IN        A        192.168.2.12
+oppo  IN         A        192.168.2.13
+tv  IN           A        192.168.2.14
+idrac-esx0001  IN      A        192.168.2.15
+idrac-esx0002  IN      A        192.168.2.16
+idrac-esx0003  IN      A        192.168.2.17
+idrac-esx0004  IN      A        192.168.2.18
+idrac-esx0005  IN      A        192.168.2.19
+k8s-master01  IN      A        192.168.2.40
+k8s-node001  IN      A        192.168.2.41
+k8s-node002  IN      A        192.168.2.42
+k8s-node003  IN      A        192.168.2.43
+k8s-node004  IN      A        192.168.2.44
+k8s-node005  IN      A        192.168.2.45
+k8s-master  IN      A        192.168.2.50
+k8s-node1  IN      A        192.168.2.51
+k8s-node2  IN      A        192.168.2.52
+k8s-node3  IN      A        192.168.2.53
+api3802  IN      A        192.168.2.247
+swtch03  IN      A        192.168.2.248
+swtch02  IN      A        192.168.2.249
+swtch01  IN      A        192.168.2.250
+vwlc001  IN      A        192.168.2.251
+9800-cl  IN      A        192.168.2.252
+openwrt  IN      A        192.168.2.253
+ikuai001  IN      A        192.168.2.254
+mychat  IN      A        164.92.89.144
