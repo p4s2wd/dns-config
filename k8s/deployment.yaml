@@ -39,6 +39,8 @@ spec:
             # 安装 git
             apt-get update && apt-get install -y git
 
+            git config --global user.email "p4s2wd@gmail.com"
+            git config --global user.name "p4s2wd"
             git config --global --add safe.directory /etc/bind
             git config --global https.proxy https://192.168.2.135:7890
             GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone git@github.com:p4s2wd/dns-config.git /etc/bind
