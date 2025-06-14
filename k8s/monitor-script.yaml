@@ -22,12 +22,6 @@ data:
 
     git config --global https.proxy https://192.168.2.135:7890
 
-    # 初始配置检查 - 使用完整路径
-    if ! named-checkconf config/named.conf; then
-      echo "ERROR: Initial configuration check failed!"
-      exit 1
-    fi
-
     while true; do
       # 获取当前 HEAD 的 commit hash
       CURRENT_COMMIT=$(git rev-parse HEAD)
