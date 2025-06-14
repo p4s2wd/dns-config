@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bind9-git
+  namespace: dns
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: bind9-git
+  template:
+    metadata:
+      labels:
+        app: bind9-git
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: k8s-node01
+      
+      securityContext:
+        runAsUser: 0
+      
+      initContainers:
+      - name: git-cloner
+        image: docker.1ms.run/alpine/git:latest
+        command: 
+        - /bin/sh
+        - -c
+        args:
+          - |
+            # 直接克隆到目标路径并设置正确权限
+            git config --global --add safe.directory /etc/bind
+            git config --global https.proxy https://192.168.2.135:7890
+
+            git clone --branch main --depth 1 https://github.com/p4s2wd/dns-config.git /etc/bind
+            # 设置目录所有权给 bind 用户 (UID 100)
+            chown -R 100:101 /etc/bind
+            # 设置适当权限
+            find /etc/bind -type d -exec chmod 755 {} \;
+            find /etc/bind -type f -exec chmod 644 {} \;
+        volumeMounts:
+        - name: bind-config
+          mountPath: /etc/bind
+      
+      containers:
+      - name: bind9
+        image: docker.1ms.run/ubuntu/bind9:latest
+        ports:
+        - containerPort: 53
+          protocol: UDP
+        - containerPort: 53
+          protocol: TCP
+        - containerPort: 953
+          protocol: TCP
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # 安装 git
+            apt-get update && apt-get install -y git
+            
+            # 设置正确的工作目录
+            cd /etc/bind
+            
+            # 启动监控脚本
+            /monitor.sh &
+            
+            # 以 bind 用户运行 BIND9，指定配置文件路径
+            exec su -s /bin/sh -c "exec named -g -d 3 -c /etc/bind/config/named.conf" bind
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        volumeMounts:
+        - name: bind-config
+          mountPath: /etc/bind
+        - name: monitor-script
+          mountPath: /monitor.sh
+          subPath: monitor.sh
+        
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "ps -efwww | grep named >/dev/null 2>&1"
+          initialDelaySeconds: 300
+          periodSeconds: 30
+          timeoutSeconds: 5
+        
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "256Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+      
+      volumes:
+      - name: bind-config
+        emptyDir: {}
+      - name: monitor-script
+        configMap:
+          name: bind-monitor-script
+          defaultMode: 0755  # 确保有执行权限

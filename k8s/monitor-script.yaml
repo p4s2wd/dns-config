@@ -1,0 +1,70 @@
+# 更新 monitor-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bind-monitor-script
+  namespace: dns
+data:
+  monitor.sh: |
+    #!/bin/sh
+    set -e
+
+    CONFIG_PATH="/etc/bind"
+    GIT_REPO="https://github.com/p4s2wd/dns-config.git"
+    GIT_BRANCH="main"
+    CHECK_INTERVAL=60
+
+    cd "$CONFIG_PATH"
+
+    # 设置 Git 配置
+    git config --global user.email "p4s2wd@gmail.com"
+    git config --global user.name "p4s2wd"
+
+    git config --global https.proxy https://192.168.2.135:7890
+
+    # 初始配置检查 - 使用完整路径
+    if ! named-checkconf config/named.conf; then
+      echo "ERROR: Initial configuration check failed!"
+      exit 1
+    fi
+
+    while true; do
+      # 获取当前 HEAD 的 commit hash
+      CURRENT_COMMIT=$(git rev-parse HEAD)
+      
+      # 获取远程最新 commit
+      git fetch origin $GIT_BRANCH
+      REMOTE_COMMIT=$(git rev-parse origin/$GIT_BRANCH)
+      
+      # 比较 commit 是否相同
+      if [ "$CURRENT_COMMIT" != "$REMOTE_COMMIT" ]; then
+        echo "[$(date)] Detected new configuration. Pulling changes..."
+        git pull --ff-only origin $GIT_BRANCH
+        
+        # 检查配置文件语法 - 使用完整路径
+        echo "Checking configuration syntax..."
+        if ! named-checkconf config/named.conf; then
+          echo "ERROR: named.conf syntax check failed!"
+          continue
+        fi
+        
+        echo "Checking zone files..."
+        ZONE_ERROR=0
+        for zone in records/*.zone; do
+          zone_name=$(basename $zone .zone)
+          if ! named-checkzone $zone_name $zone; then
+            echo "ERROR: Zone $zone_name check failed!"
+            ZONE_ERROR=1
+          fi
+        done
+        
+        if [ $ZONE_ERROR -eq 0 ]; then
+          echo "Configuration is valid. Reloading BIND9..."
+          rndc reload
+          echo "BIND9 reloaded successfully at $(date)"
+        else
+          echo "ERROR: Zone file errors detected. Not reloading."
+        fi
+      fi
+      sleep $CHECK_INTERVAL
+    done
