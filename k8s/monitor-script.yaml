@@ -10,7 +10,7 @@ data:
     set -e
 
     CONFIG_PATH="/etc/bind"
-    GIT_REPO="https://github.com/p4s2wd/dns-config.git"
+    GIT_REPO="git@github.com:p4s2wd/dns-config.git"
     GIT_BRANCH="main"
     CHECK_INTERVAL=60
 
