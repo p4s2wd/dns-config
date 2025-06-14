@@ -23,28 +23,6 @@ spec:
       securityContext:
         runAsUser: 0
       
-      initContainers:
-      - name: git-cloner
-        image: docker.1ms.run/alpine/git:latest
-        command: 
-        - /bin/sh
-        - -c
-        args:
-          - |
-            # 直接克隆到目标路径并设置正确权限
-            git config --global --add safe.directory /etc/bind
-            git config --global https.proxy https://192.168.2.135:7890
-
-            git clone --branch main --depth 1 https://github.com/p4s2wd/dns-config.git /etc/bind
-            # 设置目录所有权给 bind 用户 (UID 100)
-            chown -R 100:101 /etc/bind
-            # 设置适当权限
-            find /etc/bind -type d -exec chmod 755 {} \;
-            find /etc/bind -type f -exec chmod 644 {} \;
-        volumeMounts:
-        - name: bind-config
-          mountPath: /etc/bind
-      
       containers:
       - name: bind9
         image: docker.1ms.run/ubuntu/bind9:latest
@@ -60,6 +38,17 @@ spec:
           - |
             # 安装 git
             apt-get update && apt-get install -y git
+
+            git config --global --add safe.directory /etc/bind
+            git config --global https.proxy https://192.168.2.135:7890
+            GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --branch main --depth 1 git@github.com:p4s2wd/dns-config.git /etc/bind
+            
+            # 设置目录所有权给 bind 用户 (UID 100)
+            chown -R 100:101 /etc/bind
+            
+            # 设置适当权限
+            find /etc/bind -type d -exec chmod 755 {} \;
+            find /etc/bind -type f -exec chmod 644 {} \;
             
             # 设置正确的工作目录
             cd /etc/bind
@@ -68,7 +57,7 @@ spec:
             /monitor.sh &
             
             # 以 bind 用户运行 BIND9，指定配置文件路径
-            exec su -s /bin/sh -c "exec named -g -d 3 -c /etc/bind/config/named.conf" bind
+            exec su -s /bin/sh -c "exec named -g -c /etc/bind/config/named.conf" bind
         env:
         - name: TZ
           value: Asia/Shanghai
