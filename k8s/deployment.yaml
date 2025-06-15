@@ -57,3 +57,39 @@ spec:
           capabilities:
             add: ["NET_BIND_SERVICE"]
           runAsUser: 0
+        
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        volumeMounts:
+        - name: bind-config
+          mountPath: /etc/bind
+        - name: monitor-script
+          mountPath: /monitor.sh
+          subPath: monitor.sh
+        
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "ps -efwww | grep named >/dev/null 2>&1"
+          initialDelaySeconds: 300
+          periodSeconds: 30
+          timeoutSeconds: 5
+        
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "256Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+      
+      volumes:
+      - name: bind-config
+        emptyDir: {}
+      - name: monitor-script
+        configMap:
+          name: bind-monitor-script
+          defaultMode: 0755  # 确保有执行权限
