@@ -5,11 +5,11 @@ metadata:
   namespace: dns
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: bind9-git
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -19,17 +19,16 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
         kubernetes.io/hostname: "k8s-node01"
-      securityContext:  # 修正点1：正确的位置
-        capabilities:
-          add: ["NET_BIND_SERVICE"]
-        runAsUser: 0
+      # Pod级别的securityContext (用于init操作)
+      securityContext:
+        runAsUser: 0  # 临时使用root进行git操作
       containers:
       - name: bind9
         image: docker.1ms.run/ubuntu/bind9:latest
         command: ["/bin/sh", "-c"]
         args:
         - |
-          # 安装 git
+          # 安装git
           apt-get update && apt-get install -y git
           
           git config --global user.email "p4s2wd@gmail.com"
@@ -53,7 +52,9 @@ spec:
           protocol: TCP
         - containerPort: 953
           protocol: TCP
-        securityContext:  # 修正点2：容器级安全上下文（可选）
+        # 容器级别的securityContext (用于运行BIND9)
+        securityContext:
           capabilities:
             add: ["NET_BIND_SERVICE"]
-          runAsUser: 100  # 建议改用非root用户
+          runAsUser: 100  # 以bind用户运行
+          runAsGroup: 101
