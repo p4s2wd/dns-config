@@ -56,5 +56,4 @@ spec:
         securityContext:
           capabilities:
             add: ["NET_BIND_SERVICE"]
-          runAsUser: 100  # 以bind用户运行
-          runAsGroup: 101
+          runAsUser: 0
