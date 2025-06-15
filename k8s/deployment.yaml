@@ -45,7 +45,7 @@ spec:
           
           cd /etc/bind
           /monitor.sh &
-          exec su -s /bin/sh -c "exec named -g -c /etc/bind/config/named.conf" bind
+          exec named -g -c /etc/bind/config/named.conf
         ports:
         - containerPort: 53
           protocol: UDP
